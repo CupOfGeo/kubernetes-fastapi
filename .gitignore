@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# gcp private key please dont push to git or docker
+gcp_key.json
+
 # C extensions
 *.so
 

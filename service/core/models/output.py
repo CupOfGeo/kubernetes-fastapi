@@ -7,3 +7,7 @@ class MessageOutput(BaseModel):
     n: int = Field(..., title="n: a large integer")
     largest_prime_factor: int = Field(..., title="Largest prime factor of n")
     elapsed_time: float = Field(..., title="Calculation time (seconds)")
+
+class GenOutPut(BaseModel):
+    out: str = Field(..., title="Generated text")
+

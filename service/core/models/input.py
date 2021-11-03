@@ -3,5 +3,11 @@ from pydantic import BaseModel, Field
 
 class MessageInput(BaseModel):
     pass
-    # field1: str = Field(..., title="First string field")
-    # field2: str = Field(..., title="Second string field")
+
+class PrompInput(BaseModel):
+    text: str = Field(..., title="promp")
+    max_tokens: int = Field(..., title="max tokens")
+    temp: float = Field(..., title="temperature")
+
+
+

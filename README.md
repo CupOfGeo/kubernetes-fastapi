@@ -15,8 +15,8 @@ Run from active Python environment using `uvicorn`:
 
 Or build and run the Docker container:
 
-    docker build -t 4oh4/kubernetes-fastapi:1.0.0 .
-    docker run -p 8080:8080 --name kubernetes-fastapi 4oh4/kubernetes-fastapi:1.0.0
+    docker build -t cupofgeo/kubernetes-fastapi:1.0.0 .
+    docker run -p 8080:8080 --name kubernetes-fastapi cupofgeo/kubernetes-fastapi:1.0.0
 
 Navigate to http://localhost:8080/docs to test the API.
 
@@ -36,7 +36,7 @@ The API responds with a greeting, and the result of a long-running calculation o
 
 If desired, push the container to Docker Hub yourself, and change all references to the image accordingly. Replace "4oh4" with your Docker Hub ID):
 
-    docker push 4oh4/kubernetes-fastapi:1.0.0
+    docker push cupofgeo/kubernetes-fastapi:1.0.0
 
 You may also need to make the image public as well.
 
@@ -47,12 +47,20 @@ Follow the steps in this section if deploying to Google Cloud GKE, or skip if de
     gcloud components install kubectl
 
     gcloud config set project my-project-id
-    gcloud config set compute/zone europe-west2-a
+    gcloud config set compute/zone us-east1-d
 
 Create a cluster and get credentials for `kubectl`:
 
-    gcloud container clusters create my-cluster-name --num-nodes=3
+    gcloud container clusters create my-cluster-name --num-nodes=1 \
+    --preemptible \
+    --machine-type n1-highmem-8 \
+    --enable-autoscaling --max-nodes=1 --min-nodes=0 \
+    --accelerator type=nvidia-tesla-k80,count=2
     gcloud container clusters get-credentials my-cluster-name
+
+nvidia driver:
+
+    kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/container-engine-accelerators/master/nvidia-driver-installer/cos/daemonset-preloaded.yaml
 
 ## Kubernetes deployment
 
@@ -95,3 +103,28 @@ Use `locust` to simulate a high load on the API
 
 Inspiration and code for FastAPI setup:
 [How to continuously deploy a fastAPI to AWS Lambda with AWS SAM](https://iwpnd.pw/articles/2020-01/deploy-fastapi-to-aws-lambda).
+
+kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/container-engine-accelerators/master/nvidia-driver-installer/cos/daemonset-preloaded.yaml
+
+kubectl create clusterrolebinding sa-admin --clusterrole=cluster-admin --serviceaccount=kubeflow:pipeline-runner
+
+
+
+gcloud container clusters create my-cluster-name --num-nodes=1\
+    --preemptible \
+    --machine-type n1-highmem-8 \
+    --enable-autoscaling --max-nodes=1 --min-nodes=0 \
+    --metadata "install-nvidia-driver=True" \
+    --accelerator type=nvidia-tesla-k80,count=2
+
+
+gcloud container node-pools create preemptible-gpu-pool \
+    --cluster=my-cluster-name \
+    --zone us-east1-d \
+    --enable-autoscaling --max-nodes=1 --min-nodes=0 \
+    --num-nodes=1 \
+    --machine-type n1-highmem-8 \
+    --preemptible \
+    --node-taints=preemptible=true:NoSchedule \
+    --scopes cloud-platform --verbosity error \
+    --accelerator type=nvidia-tesla-k80,count=2

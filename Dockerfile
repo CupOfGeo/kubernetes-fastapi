@@ -1,7 +1,19 @@
 #FROM python:3.7
-FROM python:3.9.4-slim-buster
+# FROM python:3.9.4-slim-buster
+# FROM gcr.io/deeplearning-platform-release/base-cu113:latest
+
+# dosent work no pip no python
+FROM nvidia/cuda:11.0-base
 
 COPY requirements.txt /usr/src/requirements.txt
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3.9 \
+    python3-pip \
+    && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+
 RUN pip install --no-cache-dir -r /usr/src/requirements.txt
 
 EXPOSE 8080

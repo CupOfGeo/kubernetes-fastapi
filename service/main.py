@@ -9,6 +9,9 @@ from service.core.models.input import PrompInput
 import os
 from google.cloud import storage
 
+MAX_TEMP = 1.5
+MIN_TEMP = 0.5
+
 
 def read_file_blob(bucket_name, folder):
     # Instantiate a CGS client
@@ -26,16 +29,22 @@ def read_file_blob(bucket_name, folder):
 
     for blob in blobs:
         if (not blob.name.endswith("/")):
-            print(blob.name)
-            #blob.download_to_filename(blob.name)
+            # print(blob.name)
+            blob.download_to_filename(blob.name)
 
 
-read_file_blob('central-bucket-george','Rapper')
+read_file_blob('central-bucket-george', 'Rapper')
+read_file_blob('central-bucket-george', 'Country')
+read_file_blob('central-bucket-george', 'BigCountry')
 
 path_to_model = '/Rapper'
+path_to_cowboy = '/Country'
+path_to_big_cowboy = '/BigCountry'
 
-# model = GPTNeoForCausalLM.from_pretrained(path_to_model).half().to("cuda")
-# tokenizer = AutoTokenizer.from_pretrained(path_to_model)
+rapper = GPTNeoForCausalLM.from_pretrained(path_to_model).half().to("cuda")
+cowboy = GPTNeoForCausalLM.from_pretrained(path_to_cowboy).half().to("cuda")
+big_cowboy = GPTNeoForCausalLM.from_pretrained(path_to_cowboy).half().to("cuda")
+tokenizer = AutoTokenizer.from_pretrained(path_to_model)
 
 app = FastAPI(
     title=PROJECT_NAME,
@@ -57,7 +66,7 @@ def pong():
     return {"ping": "pong!"}
 
 
-@app.post("/generate", response_model=GenOutPut ,tags=["GPT-neo"])
+@app.post("/rapper", response_model=GenOutPut, tags=["GPT-neo 1.3B rapper"])
 def example_get(inputs: PrompInput):
     """
     Send promp, max_tokens, temp
@@ -70,22 +79,102 @@ def example_get(inputs: PrompInput):
     inputs.dict()
     text = inputs.text
 
-    # ids = tokenizer(text, return_tensors="pt").input_ids.to("cuda")
-    #
-    # # add the length of the prompt tokens to match with the mesh-tf generation
-    # max_length = inputs.max_tokens + ids.shape[1]
-    #
-    # gen_tokens = model.generate(
-    #     ids,
-    #     do_sample=True,
-    #     min_length=max_length,
-    #     max_length=max_length,
-    #     temperature=inputs.temp,
-    #     use_cache=True,
-    #     num_return_sequences=3,
-    # )
-    # gen_text = tokenizer.batch_decode(gen_tokens)[0]
+    ids = tokenizer(text, return_tensors="pt").input_ids.to("cuda")
 
-    gen_text = ", ".join(os.listdir('Rapper'))
+    # add the length of the prompt tokens to match with the mesh-tf generation
+    max_length = inputs.max_tokens + ids.shape[1]
+
+    if max_length <= 1:
+        max_length = 10
+
+    if inputs.temp < MIN_TEMP or inputs.temp > MAX_TEMP:
+        inputs.temp = 1.0
+
+    gen_tokens = rapper.generate(
+        ids,
+        do_sample=True,
+        min_length=max_length,
+        max_length=max_length,
+        temperature=inputs.temp,
+        use_cache=True,
+        num_return_sequences=3,
+    )
+    gen_text = tokenizer.batch_decode(gen_tokens)[0]
+
     return {'out': gen_text}
 
+
+@app.post("/cowboy", response_model=GenOutPut, tags=["GPT-neo 1.3B country"])
+def example_get(inputs: PrompInput):
+    """
+    Send promp, max_tokens, temp
+
+    This will generate text from gpt-neo
+
+    And this path operation will:
+    * return gen_out
+    """
+    inputs.dict()
+    text = inputs.text
+
+    ids = tokenizer(text, return_tensors="pt").input_ids.to("cuda")
+
+    # add the length of the prompt tokens to match with the mesh-tf generation
+    max_length = inputs.max_tokens + ids.shape[1]
+
+    if max_length <= 1:
+        max_length = 10
+
+    if inputs.temp < MIN_TEMP or inputs.temp > MAX_TEMP:
+        inputs.temp = 1.0
+
+    gen_tokens = cowboy.generate(
+        ids,
+        do_sample=True,
+        min_length=max_length,
+        max_length=max_length,
+        temperature=inputs.temp,
+        use_cache=True,
+        num_return_sequences=3,
+    )
+    gen_text = tokenizer.batch_decode(gen_tokens)[0]
+
+    return {'out': gen_text}
+
+
+@app.post("/big_cowboy", response_model=GenOutPut, tags=["GPT-neo 2.7B cowboy"])
+def example_get(inputs: PrompInput):
+    """
+    Send promp, max_tokens, temp
+
+    This will generate text from gpt-neo
+
+    And this path operation will:
+    * return gen_out
+    """
+    inputs.dict()
+    text = inputs.text
+
+    ids = tokenizer(text, return_tensors="pt").input_ids.to("cuda")
+
+    # add the length of the prompt tokens to match with the mesh-tf generation
+    max_length = inputs.max_tokens + ids.shape[1]
+
+    if max_length <= 1:
+        max_length = 10
+
+    if inputs.temp < MIN_TEMP or inputs.temp > MAX_TEMP:
+        inputs.temp = 1.0
+
+    gen_tokens = big_cowboy.generate(
+        ids,
+        do_sample=True,
+        min_length=max_length,
+        max_length=max_length,
+        temperature=inputs.temp,
+        use_cache=True,
+        num_return_sequences=3,
+    )
+    gen_text = tokenizer.batch_decode(gen_tokens)[0]
+
+    return {'out': gen_text}

@@ -65,6 +65,11 @@ nvidia driver:
 ## Kubernetes deployment
 
     kubectl apply -f api.yaml
+    
+expose port
+
+    kubectl get service kf-api-svc --output yaml
+
 
 If working locally, e.g. using `minikube`, use port forwarding to expose the service:
 
@@ -128,3 +133,9 @@ gcloud container node-pools create preemptible-gpu-pool \
     --node-taints=preemptible=true:NoSchedule \
     --scopes cloud-platform --verbosity error \
     --accelerator type=nvidia-tesla-k80,count=2
+
+
+
+
+
+

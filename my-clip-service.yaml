@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-cip-service
+spec:
+  type: ClusterIP
+  # Uncomment the below line to create a Headless Service
+  # clusterIP: None
+  selector:
+    app: kf-api-svc
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
